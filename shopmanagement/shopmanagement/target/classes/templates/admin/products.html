@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm - GlowWear Admin</title>
+    <link class="style-sheet" rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="admin-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div>
+                <div class="admin-logo">
+                    <i class="fa-solid fa-gauge-high"></i> GlowWear Admin
+                </div>
+                <nav class="admin-menu">
+                    <a href="/admin" class="admin-menu-item">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="/admin/products" class="admin-menu-item active">
+                        <i class="fa-solid fa-shirt"></i> Quản lý sản phẩm
+                    </a>
+                    <a href="/admin/categories" class="admin-menu-item">
+                        <i class="fa-solid fa-folder-open"></i> Quản lý danh mục
+                    </a>
+                    <a href="/admin/orders" class="admin-menu-item">
+                        <i class="fa-solid fa-receipt"></i> Quản lý đơn hàng
+                    </a>
+                    <a href="/admin/users" class="admin-menu-item">
+                        <i class="fa-solid fa-users-gear"></i> Quản lý tài khoản
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="admin-user-block">
+                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Đang đăng nhập:</div>
+                <div style="font-weight: 700; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-user-tie"></i> <span th:text="${currentUser.fullName}"></span>
+                </div>
+                <a href="/" class="btn btn-outline btn-sm" style="width: 100%; border-color: rgba(255,255,255,0.2); color: #fff;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Storefront
+                </a>
+            </div>
+        </aside>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
+            
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Quản Lý Sản Phẩm</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Thêm mới, cập nhật thông tin chi tiết và tồn kho quần áo</p>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${success}" class="alert alert-success">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}"></span>
+            </div>
+
+            <!-- ADD / EDIT PRODUCT FORM -->
+            <div class="admin-card">
+                <h3 class="admin-card-title" id="formTitle"><i class="fa-solid fa-plus-circle"></i> Thêm Sản Phẩm Mới</h3>
+                
+                <form action="/admin/products/save" method="post">
+                    <input type="hidden" name="id" id="prodId">
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Tên sản phẩm *:</label>
+                            <input type="text" name="name" id="prodName" class="form-control" placeholder="Ví dụ: Áo thun nam Polo..." required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Danh mục nhóm sản phẩm *:</label>
+                            <select name="categoryId" id="prodCategory" class="form-control" required>
+                                <option value="" disabled selected>-- Chọn danh mục --</option>
+                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Category</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Giá bán lẻ (đ) *:</label>
+                            <input type="number" name="price" id="prodPrice" class="form-control" min="0" placeholder="Ví dụ: 150000" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số lượng nhập kho *:</label>
+                            <input type="number" name="quantity" id="prodQuantity" class="form-control" min="0" placeholder="Ví dụ: 50" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kích cỡ (Sizes):</label>
+                            <input type="text" name="size" id="prodSize" class="form-control" placeholder="Ví dụ: S, M, L, XL">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Màu sắc (Colors):</label>
+                            <input type="text" name="color" id="prodColor" class="form-control" placeholder="Ví dụ: Trắng, Đen, Đỏ">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Đường dẫn ảnh sản phẩm (Link ảnh trực tuyến):</label>
+                        <input type="text" name="imageUrl" id="prodImageUrl" class="form-control" placeholder="Đường dẫn url https://images.unsplash.com/... hoặc để trống">
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu Sản Phẩm
+                        </button>
+                        <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="btn btn-outline" style="display: none;">
+                            Hủy chỉnh sửa
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PRODUCT LIST TABLE -->
+            <div class="admin-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <h3 class="admin-card-title" style="margin-bottom: 0;"><i class="fa-solid fa-list-check"></i> Danh Sách Sản Phẩm</h3>
+                    
+                    <!-- Search Input -->
+                    <form action="/admin/products" method="get" style="display: flex; gap: 0.5rem; max-width: 300px; width: 100%;">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm sản phẩm theo tên..." th:value="${search}">
+                        <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-search"></i></button>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Giá bán</th>
+                                <th>Tồn kho</th>
+                                <th>Kích cỡ / Màu sắc</th>
+                                <th style="text-align: right;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${products}">
+                                <td style="font-weight: 700; color: var(--text-muted);" th:text="'#' + ${p.id}">#1</td>
+                                <td>
+                                    <img th:src="${p.imageUrl != null && p.imageUrl != '' ? p.imageUrl : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100'}" 
+                                         class="table-img" th:alt="${p.name}">
+                                </td>
+                                <td style="font-weight: 700; color: var(--secondary);" th:text="${p.name}">Product Name</td>
+                                <td th:text="${p.category != null ? p.category.name : 'Chưa phân loại'}">Category</td>
+                                <td class="price-tag" style="font-weight: 800; color: var(--primary);" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT')}">Price</td>
+                                <td th:classappend="${p.quantity < 5} ? 'low-stock' : ''" 
+                                    style="font-weight: 700;"
+                                    th:text="${p.quantity}">Quantity</td>
+                                <td th:text="${(p.size != null && p.size != '' ? p.size : '—') + ' / ' + (p.color != null && p.color != '' ? p.color : '—')}">Sizes/Colors</td>
+                                <td style="text-align: right;">
+                                    <div style="display: inline-flex; gap: 0.25rem;">
+                                        <!-- Edit button populated with inline javascript values -->
+                                        <button type="button" 
+                                                th:onclick="editProduct([[${p.id}]], [[${p.name}]], [[${p.price}]], [[${p.quantity}]], [[${p.size}]], [[${p.color}]], [[${p.imageUrl}]], [[${p.category != null ? p.category.id : ''}]])"
+                                                class="btn btn-outline btn-sm" style="color: var(--primary); border-color: var(--primary-light);">
+                                            <i class="fa-solid fa-pen-to-square"></i> Sửa
+                                        </button>
+                                        
+                                        <a th:href="@{'/admin/products/delete/' + ${p.id}}" 
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');"
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fa-solid fa-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${#lists.isEmpty(products)}" style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+                    Không có sản phẩm nào khớp với tìm kiếm.
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- JS helper for Add/Edit populating -->
+    <script>
+        function editProduct(id, name, price, quantity, size, color, imageUrl, categoryId) {
+            document.getElementById("formTitle").innerHTML = "<i class='fa-solid fa-pen-to-square'></i> Sửa Sản Phẩm (Mã #" + id + ")";
+            document.getElementById("prodId").value = id;
+            document.getElementById("prodName").value = name;
+            document.getElementById("prodPrice").value = price;
+            document.getElementById("prodQuantity").value = quantity;
+            document.getElementById("prodSize").value = size || '';
+            document.getElementById("prodColor").value = color || '';
+            document.getElementById("prodImageUrl").value = imageUrl || '';
+            document.getElementById("prodCategory").value = categoryId;
+            document.getElementById("cancelEditBtn").style.display = "inline-flex";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            document.getElementById("formTitle").innerHTML = "<i class='fa-solid fa-plus-circle'></i> Thêm Sản Phẩm Mới";
+            document.getElementById("prodId").value = "";
+            document.getElementById("prodName").value = "";
+            document.getElementById("prodPrice").value = "";
+            document.getElementById("prodQuantity").value = "";
+            document.getElementById("prodSize").value = "";
+            document.getElementById("prodColor").value = "";
+            document.getElementById("prodImageUrl").value = "";
+            document.getElementById("prodCategory").selectedIndex = 0;
+            document.getElementById("cancelEditBtn").style.display = "none";
+        }
+    </script>
+
+</body>
+</html>

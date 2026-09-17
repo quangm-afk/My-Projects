@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlowWear - Cửa Hàng Thời Trang Hiện Đại</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <i class="fa-solid fa-bag-shopping"></i> GlowWear
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link active">Sản phẩm</a>
+            <a href="/orders" class="nav-link" th:if="${currentUser != null}">Đơn hàng của tôi</a>
+            <a href="/admin" class="nav-link" th:if="${currentUser != null && currentUser.role == 'ADMIN'}">
+                <i class="fa-solid fa-gauge-high"></i> Admin Panel
+            </a>
+        </div>
+        <div class="nav-links">
+            <!-- If logged in -->
+            <div th:if="${currentUser != null}" style="display: flex; align-items: center; gap: 1rem;">
+                <a href="/profile" class="nav-link">
+                    <i class="fa-solid fa-user-circle"></i> <span th:text="${currentUser.fullName}">Tài khoản</span>
+                </a>
+                <a href="/logout" class="btn btn-outline btn-sm">Đăng xuất <i class="fa-solid fa-sign-out-alt"></i></a>
+            </div>
+            <!-- If not logged in -->
+            <div th:if="${currentUser == null}">
+                <a href="/login" class="btn btn-primary btn-sm">Đăng nhập</a>
+                <a href="/register" class="btn btn-outline btn-sm">Đăng ký</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Alerts for feedback -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i> <span th:text="${success}">Thành công</span>
+        </div>
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}">Lỗi</span>
+        </div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Khám Phá Thời Trang Mới</h1>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">Nâng tầm phong cách cá nhân cùng GlowWear</p>
+            </div>
+        </div>
+
+        <!-- Filter and Search Bar -->
+        <div class="filter-bar">
+            <!-- Category Filtering -->
+            <div class="category-tags">
+                <a href="/" class="tag" th:classappend="${selectedCategory == null} ? 'active' : ''">Tất cả</a>
+                <a th:each="cat : ${categories}"
+                   th:href="@{/(categoryId=${cat.id}, search=${search})}"
+                   class="tag"
+                   th:classappend="${selectedCategory == cat.id} ? 'active' : ''"
+                   th:text="${cat.name}">Category</a>
+            </div>
+
+            <!-- Search Form -->
+            <form action="/" method="get" class="search-form">
+                <input type="hidden" name="categoryId" th:value="${selectedCategory}" th:if="${selectedCategory != null}">
+                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm trang phục..." th:value="${search}">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="product-grid" th:if="${not #lists.isEmpty(products)}">
+            <div class="product-card" th:each="product : ${products}">
+                <a th:href="@{'/product/' + ${product.id}}">
+                    <div class="product-img-wrapper">
+                        <span class="product-category-badge" th:text="${product.category != null ? product.category.name : 'Chưa phân loại'}">Category</span>
+                        <img th:src="${product.imageUrl != null && product.imageUrl != '' ? product.imageUrl : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=500'}" 
+                             class="product-img" th:alt="${product.name}">
+                    </div>
+                </a>
+                <div class="product-info">
+                    <div>
+                        <a th:href="@{'/product/' + ${product.id}}">
+                            <h3 class="product-name" th:text="${product.name}">Product Name</h3>
+                        </a>
+                        <div class="product-meta">
+                            <span class="product-price price-tag" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')}">Price</span>
+                            <span class="product-stock" th:classappend="${product.quantity < 5} ? 'low-stock' : ''"
+                                  th:text="${product.quantity > 0 ? 'Còn: ' + product.quantity : 'Hết hàng'}">Stock</span>
+                        </div>
+                        <!-- Extra specs details for premium feel -->
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 0.75rem;">
+                            <span>Size: <strong th:text="${product.size != null && product.size != '' ? product.size : 'Freesize'}"></strong></span>
+                            <span>Màu: <strong th:text="${product.color != null && product.color != '' ? product.color : 'Hỗn hợp'}"></strong></span>
+                        </div>
+                    </div>
+                    <div class="product-card-footer">
+                        <a th:href="@{'/product/' + ${product.id}}" class="btn btn-outline btn-sm" style="width: 100%;">
+                            Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No products found display -->
+        <div th:if="${#lists.isEmpty(products)}" style="text-align: center; padding: 4rem 1rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);">
+            <i class="fa-solid fa-box-open" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+            <h3>Không tìm thấy sản phẩm nào!</h3>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Hãy thử tìm kiếm từ khóa khác hoặc chuyển danh mục quần áo khác.</p>
+            <a href="/" class="btn btn-primary btn-sm" style="margin-top: 1.5rem;">Quay lại cửa hàng</a>
+        </div>
+
+    </div>
+
+</body>
+</html>

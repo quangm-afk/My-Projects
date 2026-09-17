@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đơn hàng - GlowWear Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="admin-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div>
+                <div class="admin-logo">
+                    <i class="fa-solid fa-gauge-high"></i> GlowWear Admin
+                </div>
+                <nav class="admin-menu">
+                    <a href="/admin" class="admin-menu-item">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="/admin/products" class="admin-menu-item">
+                        <i class="fa-solid fa-shirt"></i> Quản lý sản phẩm
+                    </a>
+                    <a href="/admin/categories" class="admin-menu-item">
+                        <i class="fa-solid fa-folder-open"></i> Quản lý danh mục
+                    </a>
+                    <a href="/admin/orders" class="admin-menu-item active">
+                        <i class="fa-solid fa-receipt"></i> Quản lý đơn hàng
+                    </a>
+                    <a href="/admin/users" class="admin-menu-item">
+                        <i class="fa-solid fa-users-gear"></i> Quản lý tài khoản
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="admin-user-block">
+                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Đang đăng nhập:</div>
+                <div style="font-weight: 700; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-user-tie"></i> <span th:text="${currentUser.fullName}"></span>
+                </div>
+                <a href="/" class="btn btn-outline btn-sm" style="width: 100%; border-color: rgba(255,255,255,0.2); color: #fff;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Storefront
+                </a>
+            </div>
+        </aside>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
+            
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Quản Lý Đơn Hàng</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Xem danh sách đặt hàng, cập nhật trạng thái vận chuyển và xác nhận thanh toán</p>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${success}" class="alert alert-success">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}"></span>
+            </div>
+
+            <!-- ORDERS LIST -->
+            <div class="admin-card">
+                <h3 class="admin-card-title"><i class="fa-solid fa-receipt"></i> Tất Cả Đơn Hàng Hệ Thống</h3>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Sản phẩm & Chi tiết</th>
+                                <th>Tổng tiền</th>
+                                <th>Thông tin giao hàng</th>
+                                <th>Trạng thái hiện tại</th>
+                                <th>Xử lý trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders}">
+                                <td style="font-weight: 700; color: var(--secondary);" th:text="'#GW-' + ${order.id}">#GW-1</td>
+                                <td>
+                                    <div style="font-weight: 700; color: var(--secondary);" th:text="${order.user.fullName}">Customer Name</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);" th:text="'Tài khoản: ' + ${order.user.username}">username</div>
+                                </td>
+                                <td th:text="${#temporals.format(order.orderDate, 'dd-MM-yyyy HH:mm')}">Date</td>
+                                <td>
+                                    <!-- Line items within order -->
+                                    <div th:each="item : ${order.orderItems}" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                        <img th:src="${item.product.imageUrl != null && item.product.imageUrl != '' ? item.product.imageUrl : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100'}" 
+                                             class="table-img" style="width: 30px; height: 36px;" th:alt="${item.product.name}">
+                                        <div>
+                                            <span style="font-weight: 600;" th:text="${item.product.name}">Product</span>
+                                            <span style="font-size: 0.8rem; color: var(--text-muted);" 
+                                                  th:text="' (SL: ' + ${item.quantity} + ', Size: ' + ${item.product.size} + ')'"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="price-tag" style="font-weight: 800; color: var(--primary);" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}">350000</td>
+                                <td>
+                                    <div style="font-weight: 600;" th:text="${order.phoneNumber}">Phone</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                                         th:text="${order.shippingAddress}" th:title="${order.shippingAddress}">Address</div>
+                                </td>
+                                <td>
+                                    <!-- Current badge status -->
+                                    <span class="badge" 
+                                          th:classappend="${order.status == 'PENDING' ? 'badge-pending' : 
+                                                           (order.status == 'CONFIRMED' ? 'badge-confirmed' : 
+                                                           (order.status == 'SHIPPING' ? 'badge-shipping' : 
+                                                           (order.status == 'DELIVERED' ? 'badge-delivered' : 'badge-cancelled')))}"
+                                          th:text="${order.status == 'PENDING' ? 'Chờ xác nhận' : 
+                                                    (order.status == 'CONFIRMED' ? 'Đã xác nhận' : 
+                                                    (order.status == 'SHIPPING' ? 'Đang giao' : 
+                                                    (order.status == 'DELIVERED' ? 'Đã giao' : 'Đã hủy')))}">
+                                        Pending
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Dynamic status update dropdown form -->
+                                    <form action="/admin/orders/update-status" method="post" style="display: flex; gap: 0.25rem;">
+                                        <input type="hidden" name="orderId" th:value="${order.id}">
+                                        <select name="status" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px; width: 130px;" required>
+                                            <option value="PENDING" th:selected="${order.status == 'PENDING'}">Chờ xác nhận</option>
+                                            <option value="CONFIRMED" th:selected="${order.status == 'CONFIRMED'}">Đã xác nhận</option>
+                                            <option value="SHIPPING" th:selected="${order.status == 'SHIPPING'}">Đang giao hàng</option>
+                                            <option value="DELIVERED" th:selected="${order.status == 'DELIVERED'}">Đã giao hàng</option>
+                                            <option value="CANCELLED" th:selected="${order.status == 'CANCELLED'}">Hủy đơn</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.5rem;" title="Cập nhật">
+                                            <i class="fa-solid fa-circle-chevron-right"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+                    Hiện chưa có bất kỳ đơn đặt hàng nào trong hệ thống.
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+</body>
+</html>

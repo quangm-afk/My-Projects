@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - GlowWear</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <!-- Brand Logo -->
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <a href="/" style="font-weight: 800; font-size: 1.8rem; color: var(--primary); display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-bag-shopping"></i> GlowWear
+                </a>
+            </div>
+
+            <h2 class="auth-title">Chào mừng trở lại</h2>
+            <p class="auth-subtitle">Đăng nhập tài khoản của bạn để khám phá</p>
+
+            <!-- Success or Error Feedback Alerts -->
+            <div th:if="${success}" class="alert alert-success" style="padding: 0.75rem; font-size: 0.85rem; margin-bottom: 1rem;">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-error" style="padding: 0.75rem; font-size: 0.85rem; margin-bottom: 1rem;">
+                <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}"></span>
+            </div>
+
+            <!-- Login Form -->
+            <form action="/login" method="post">
+                <div class="form-group">
+                    <label class="form-label">Tên đăng nhập:</label>
+                    <input type="text" name="username" class="form-control" placeholder="Nhập tên đăng nhập..." th:value="${username}" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label">Mật khẩu:</label>
+                    <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu..." required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Đăng Nhập <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                Chưa có tài khoản? <a href="/register" style="color: var(--primary); font-weight: 700;">Đăng ký ngay</a>
+            </div>
+            
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="/" style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-home"></i> Quay lại cửa hàng</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

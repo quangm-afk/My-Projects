@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn Hàng Của Tôi - GlowWear</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <i class="fa-solid fa-bag-shopping"></i> GlowWear
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Sản phẩm</a>
+            <a href="/orders" class="nav-link active">Đơn hàng của tôi</a>
+            <a href="/admin" class="nav-link" th:if="${currentUser != null && currentUser.role == 'ADMIN'}">
+                <i class="fa-solid fa-gauge-high"></i> Admin Panel
+            </a>
+        </div>
+        <div class="nav-links">
+            <div th:if="${currentUser != null}" style="display: flex; align-items: center; gap: 1rem;">
+                <a href="/profile" class="nav-link">
+                    <i class="fa-solid fa-user-circle"></i> <span th:text="${currentUser.fullName}">Tài khoản</span>
+                </a>
+                <a href="/logout" class="btn btn-outline btn-sm">Đăng xuất <i class="fa-solid fa-sign-out-alt"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i> <span th:text="${success}">Thành công</span>
+        </div>
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}">Lỗi</span>
+        </div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Lịch Sử Đua Đơn Hàng</h1>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">Quản lý và theo dõi hành trình đơn hàng của bạn</p>
+            </div>
+            <a href="/" class="btn btn-primary btn-sm"><i class="fa-solid fa-cart-plus"></i> Tiếp tục mua sắm</a>
+        </div>
+
+        <!-- Orders Table/Card List -->
+        <div class="table-responsive" th:if="${not #lists.isEmpty(orders)}">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Sản phẩm</th>
+                        <th>Số lượng</th>
+                        <th>Tổng tiền</th>
+                        <th>Thông tin giao hàng</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="order : ${orders}">
+                        <td style="font-weight: 700; color: var(--secondary);" th:text="'#GW-' + ${order.id}">#GW-1</td>
+                        <td th:text="${#temporals.format(order.orderDate, 'dd-MM-yyyy HH:mm')}">20-05-2026 14:30</td>
+                        <td>
+                            <!-- Each product item details -->
+                            <div th:each="item : ${order.orderItems}" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                                <img th:src="${item.product.imageUrl != null && item.product.imageUrl != '' ? item.product.imageUrl : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100'}" 
+                                     class="table-img" style="width: 35px; height: 42px;" th:alt="${item.product.name}">
+                                <div>
+                                    <div style="font-weight: 600;" th:text="${item.product.name}">Product Name</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                        Size: <span th:text="${item.product.size}"></span> | Màu: <span th:text="${item.product.color}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span th:each="item : ${order.orderItems}" th:text="${item.quantity}">1</span>
+                        </td>
+                        <td class="price-tag" style="font-weight: 800; color: var(--primary);" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}">350,000</td>
+                        <td>
+                            <div style="font-weight: 600;" th:text="${order.phoneNumber}">0987654321</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="${order.shippingAddress}">Address</div>
+                        </td>
+                        <td>
+                            <!-- Badges reflecting the status correctly -->
+                            <span class="badge" 
+                                  th:classappend="${order.status == 'PENDING' ? 'badge-pending' : 
+                                                   (order.status == 'CONFIRMED' ? 'badge-confirmed' : 
+                                                   (order.status == 'SHIPPING' ? 'badge-shipping' : 
+                                                   (order.status == 'DELIVERED' ? 'badge-delivered' : 'badge-cancelled')))}"
+                                  th:text="${order.status == 'PENDING' ? 'Chờ xác nhận' : 
+                                            (order.status == 'CONFIRMED' ? 'Đã xác nhận' : 
+                                            (order.status == 'SHIPPING' ? 'Đang giao' : 
+                                            (order.status == 'DELIVERED' ? 'Đã giao' : 'Đã hủy')))}">
+                                Pending
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty Orders Placeholder -->
+        <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 4rem 1rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);">
+            <i class="fa-solid fa-receipt" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+            <h3>Bạn chưa có đơn hàng nào!</h3>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Hãy lựa chọn những bộ đồ thời thượng nhất tại cửa hàng của chúng tôi.</p>
+            <a href="/" class="btn btn-primary btn-sm" style="margin-top: 1.5rem;"><i class="fa-solid fa-shopping-bag"></i> Mua sắm ngay</a>
+        </div>
+
+    </div>
+
+</body>
+</html>

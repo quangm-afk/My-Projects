@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Cá Nhân - GlowWear</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <i class="fa-solid fa-bag-shopping"></i> GlowWear
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Sản phẩm</a>
+            <a href="/orders" class="nav-link" th:if="${currentUser != null}">Đơn hàng của tôi</a>
+            <a href="/admin" class="nav-link" th:if="${currentUser != null && currentUser.role == 'ADMIN'}">
+                <i class="fa-solid fa-gauge-high"></i> Admin Panel
+            </a>
+        </div>
+        <div class="nav-links">
+            <div th:if="${currentUser != null}" style="display: flex; align-items: center; gap: 1rem;">
+                <a href="/profile" class="nav-link active">
+                    <i class="fa-solid fa-user-circle"></i> <span th:text="${currentUser.fullName}">Tài khoản</span>
+                </a>
+                <a href="/logout" class="btn btn-outline btn-sm">Đăng xuất <i class="fa-solid fa-sign-out-alt"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i> <span th:text="${success}">Thành công</span>
+        </div>
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}">Lỗi</span>
+        </div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Hồ Sơ Cá Nhân</h1>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">Quản lý thông tin bảo mật tài khoản của bạn</p>
+            </div>
+        </div>
+
+        <!-- Two Column Layout: Profile Info and Change Password -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+            
+            <!-- Left Side: Profile Summary Card -->
+            <div class="admin-card">
+                <h3 class="admin-card-title"><i class="fa-solid fa-id-card"></i> Thông Tin Tài Khoản</h3>
+                
+                <div class="detail-attributes" style="border-bottom: none; margin-bottom: 0; padding: 0.5rem 0;">
+                    <div class="attribute-row" style="margin-bottom: 1rem;">
+                        <span class="attribute-label" style="width: 150px;">Họ tên:</span>
+                        <span class="attribute-value" th:text="${currentUser.fullName}"></span>
+                    </div>
+                    <div class="attribute-row" style="margin-bottom: 1rem;">
+                        <span class="attribute-label" style="width: 150px;">Tên đăng nhập:</span>
+                        <span class="attribute-value" th:text="${currentUser.username}"></span>
+                    </div>
+                    <div class="attribute-row" style="margin-bottom: 1rem;">
+                        <span class="attribute-label" style="width: 150px;">Vai trò hệ thống:</span>
+                        <span>
+                            <span class="badge" 
+                                  th:classappend="${currentUser.role == 'ADMIN'} ? 'badge-admin' : 'badge-user'"
+                                  th:text="${currentUser.role == 'ADMIN'} ? 'Quản Trị Viên (Admin)' : 'Khách Hàng (User)'">
+                                Role
+                            </span>
+                        </span>
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label" style="width: 150px;">Trạng thái:</span>
+                        <span class="attribute-value" style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> Đang hoạt động</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Change Password Card Form -->
+            <div class="admin-card">
+                <h3 class="admin-card-title"><i class="fa-solid fa-key"></i> Đổi Mật Khẩu</h3>
+                
+                <form action="/profile/change-password" method="post" onsubmit="return validateChangePassForm()">
+                    <div class="form-group">
+                        <label class="form-label">Mật khẩu hiện tại:</label>
+                        <input type="password" name="oldPassword" class="form-control" placeholder="Nhập mật khẩu hiện tại..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mật khẩu mới:</label>
+                        <input type="password" name="newPassword" id="newPassword" class="form-control" placeholder="Nhập mật khẩu mới..." required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Xác nhận mật khẩu mới:</label>
+                        <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới..." required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        Cập Nhật Mật Khẩu <i class="fa-solid fa-save"></i>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function validateChangePassForm() {
+            var newPass = document.getElementById("newPassword").value;
+            var confirmPass = document.getElementById("confirmPassword").value;
+            if (newPass !== confirmPass) {
+                alert("Mật khẩu mới và xác nhận mật khẩu không trùng khớp!");
+                return false;
+            }
+            return true;
+        }
+    </script>
+
+</body>
+</html>

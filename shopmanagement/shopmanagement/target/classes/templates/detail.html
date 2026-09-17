@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name} + ' - Chi Tiết Sản Phẩm'"></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <i class="fa-solid fa-bag-shopping"></i> GlowWear
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Sản phẩm</a>
+            <a href="/orders" class="nav-link" th:if="${currentUser != null}">Đơn hàng của tôi</a>
+            <a href="/admin" class="nav-link" th:if="${currentUser != null && currentUser.role == 'ADMIN'}">
+                <i class="fa-solid fa-gauge-high"></i> Admin Panel
+            </a>
+        </div>
+        <div class="nav-links">
+            <div th:if="${currentUser != null}" style="display: flex; align-items: center; gap: 1rem;">
+                <a href="/profile" class="nav-link">
+                    <i class="fa-solid fa-user-circle"></i> <span th:text="${currentUser.fullName}">Tài khoản</span>
+                </a>
+                <a href="/logout" class="btn btn-outline btn-sm">Đăng xuất <i class="fa-solid fa-sign-out-alt"></i></a>
+            </div>
+            <div th:if="${currentUser == null}">
+                <a href="/login" class="btn btn-primary btn-sm">Đăng nhập</a>
+                <a href="/register" class="btn btn-outline btn-sm">Đăng ký</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Action Back Button -->
+        <a href="/" class="btn btn-outline btn-sm" style="margin-bottom: 1.5rem;">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách sản phẩm
+        </a>
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i> <span th:text="${success}">Thành công</span>
+        </div>
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}">Lỗi</span>
+        </div>
+
+        <!-- Product Detail Box Layout -->
+        <div class="detail-layout">
+            <!-- Left Side: Product Image -->
+            <div class="detail-img-wrapper">
+                <img th:src="${product.imageUrl != null && product.imageUrl != '' ? product.imageUrl : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=500'}" 
+                     class="detail-img" th:alt="${product.name}">
+            </div>
+
+            <!-- Right Side: Product Details & Purchase Form -->
+            <div class="detail-info">
+                <div>
+                    <span class="detail-category" th:text="${product.category != null ? product.category.name : 'Chưa phân loại'}">Category</span>
+                    <h1 class="detail-name" th:text="${product.name}">Product Name</h1>
+                    <div class="detail-price price-tag" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')}">Price</div>
+                    
+                    <div class="detail-attributes">
+                        <div class="attribute-row">
+                            <span class="attribute-label">Kích thước:</span>
+                            <span class="attribute-value" th:text="${product.size != null && product.size != '' ? product.size : 'Freesize'}">S, M, L</span>
+                        </div>
+                        <div class="attribute-row">
+                            <span class="attribute-label">Màu sắc:</span>
+                            <span class="attribute-value" th:text="${product.color != null && product.color != '' ? product.color : 'Hỗn hợp'}">Đen, Trắng</span>
+                        </div>
+                        <div class="attribute-row">
+                            <span class="attribute-label">Tình trạng:</span>
+                            <span class="attribute-value" th:style="${product.quantity < 5} ? 'color: var(--danger)' : 'color: var(--success)'"
+                                  th:text="${product.quantity > 0 ? 'Còn hàng (' + product.quantity + ' sản phẩm)' : 'Hết hàng'}">Còn hàng</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Box -->
+                <div class="checkout-box" th:if="${product.quantity > 0}">
+                    <!-- Logged In Order Form -->
+                    <div th:if="${currentUser != null}">
+                        <h3 class="checkout-title"><i class="fa-solid fa-cart-shopping"></i> Đặt Hàng Ngay</h3>
+                        
+                        <form action="/order/place" method="post" onsubmit="return validateOrderForm()">
+                            <input type="hidden" name="productId" th:value="${product.id}">
+                            
+                            <div class="form-group">
+                                <label class="form-label">Số lượng mua:</label>
+                                <input type="number" name="quantity" id="orderQuantity" class="form-control" value="1" min="1" th:max="${product.quantity}" required>
+                                <small style="color: var(--text-muted);">Tối đa: <span th:text="${product.quantity}"></span> sản phẩm</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Số điện thoại giao hàng:</label>
+                                <input type="text" name="phone" id="orderPhone" class="form-control" placeholder="Nhập số điện thoại của bạn..." required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Địa chỉ nhận hàng:</label>
+                                <textarea name="address" id="orderAddress" class="form-control" rows="2" placeholder="Nhập địa chỉ giao hàng cụ thể..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                                <i class="fa-solid fa-truck-fast"></i> Xác Nhận Mua Hàng
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Not Logged In Placeholder -->
+                    <div th:if="${currentUser == null}" style="text-align: center; padding: 0.5rem 0;">
+                        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+                            Đăng nhập tài khoản của bạn để tiến hành mua sản phẩm này.
+                        </p>
+                        <a href="/login" class="btn btn-secondary" style="width: 100%;">
+                            <i class="fa-solid fa-sign-in-alt"></i> Đăng nhập để mua hàng
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Out of Stock display -->
+                <div class="checkout-box" th:if="${product.quantity <= 0}" style="text-align: center; background-color: #f1f5f9; border-color: var(--border);">
+                    <p style="color: var(--danger); font-weight: 700; font-size: 1.1rem;">
+                        <i class="fa-solid fa-circle-xmark"></i> SẢN PHẨM HIỆN TẠI ĐÃ HẾT HÀNG
+                    </p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+                        Chúng tôi sẽ nhập thêm sản phẩm này trong thời gian sớm nhất.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script to validate quantities before submission -->
+    <script th:inline="javascript">
+        function validateOrderForm() {
+            var maxStock = /*[[${product.quantity}]]*/ 0;
+            var quantity = document.getElementById("orderQuantity").value;
+            if (quantity > maxStock) {
+                alert("Số lượng sản phẩm yêu cầu vượt quá tồn kho hiện tại!");
+                return false;
+            }
+            return true;
+        }
+    </script>
+
+</body>
+</html>

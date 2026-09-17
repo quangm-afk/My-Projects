@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản Trị - GlowWear</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="admin-container">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="admin-sidebar">
+            <div>
+                <div class="admin-logo">
+                    <i class="fa-solid fa-gauge-high"></i> GlowWear Admin
+                </div>
+                <nav class="admin-menu">
+                    <a href="/admin" class="admin-menu-item active">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="/admin/products" class="admin-menu-item">
+                        <i class="fa-solid fa-shirt"></i> Quản lý sản phẩm
+                    </a>
+                    <a href="/admin/categories" class="admin-menu-item">
+                        <i class="fa-solid fa-folder-open"></i> Quản lý danh mục
+                    </a>
+                    <a href="/admin/orders" class="admin-menu-item">
+                        <i class="fa-solid fa-receipt"></i> Quản lý đơn hàng
+                    </a>
+                    <a href="/admin/users" class="admin-menu-item">
+                        <i class="fa-solid fa-users-gear"></i> Quản lý tài khoản
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="admin-user-block">
+                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Đang đăng nhập:</div>
+                <div style="font-weight: 700; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-user-tie"></i> <span th:text="${currentUser.fullName}"></span>
+                </div>
+                <a href="/" class="btn btn-outline btn-sm" style="width: 100%; border-color: rgba(255,255,255,0.2); color: #fff;">
+                    <i class="fa-solid fa-arrow-left"></i> Về Storefront
+                </a>
+            </div>
+        </aside>
+
+        <!-- CONTENT PANEL -->
+        <main class="admin-content">
+            
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Báo Cáo Tổng Quan</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Hôm nay cửa hàng của bạn hoạt động thế nào?</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="/admin/products" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Thêm sản phẩm</a>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${success}" class="alert alert-success">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}"></span>
+            </div>
+
+            <!-- STATISTICS CARDS -->
+            <div class="stats-grid">
+                
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <span class="stat-label">Tổng sản phẩm</span>
+                        <span class="stat-value" th:text="${totalProducts}">0</span>
+                    </div>
+                    <div class="stat-icon" style="color: var(--primary);"><i class="fa-solid fa-shirt"></i></div>
+                </div>
+
+                <div class="stat-card" th:style="${lowStockCount > 0} ? 'border-color: #fca5a5; background-color: #fffafb' : ''">
+                    <div class="stat-info">
+                        <span class="stat-label" th:style="${lowStockCount > 0} ? 'color: var(--danger)' : ''">Tồn kho cảnh báo (&lt;5)</span>
+                        <span class="stat-value" th:style="${lowStockCount > 0} ? 'color: var(--danger)' : ''" th:text="${lowStockCount}">0</span>
+                    </div>
+                    <div class="stat-icon" th:style="${lowStockCount > 0} ? 'color: var(--danger); opacity: 0.25' : 'color: var(--warning)'"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <span class="stat-label">Tổng đơn hàng</span>
+                        <span class="stat-value" th:text="${totalOrders}">0</span>
+                    </div>
+                    <div class="stat-icon" style="color: #2563eb;"><i class="fa-solid fa-receipt"></i></div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border-color: #bbf7d0;">
+                    <div class="stat-info">
+                        <span class="stat-label" style="color: #166534;">Doanh thu bán ra</span>
+                        <span class="stat-value price-tag" style="color: var(--success);" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>
+                    </div>
+                    <div class="stat-icon" style="color: var(--success);"><i class="fa-solid fa-wallet"></i></div>
+                </div>
+
+            </div>
+
+            <!-- CRITICAL LOW STOCK WARNING PANEL -->
+            <div class="admin-card" th:if="${lowStockCount > 0}">
+                <h3 class="admin-card-title" style="color: var(--danger); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-bell"></i> Cảnh Báo Sản Phẩm Sắp Hết Hàng (Cần nhập kho gấp)
+                </h3>
+                
+                <div class="table-responsive" style="margin-bottom: 0;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Giá bán</th>
+                                <th>Tồn kho hiện tại</th>
+                                <th>Kích cỡ / Màu sắc</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${lowStockProducts}">
+                                <td>
+                                    <img th:src="${p.imageUrl != null && p.imageUrl != '' ? p.imageUrl : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100'}" 
+                                         class="table-img" th:alt="${p.name}">
+                                </td>
+                                <td style="font-weight: 700;" th:text="${p.name}">Product Name</td>
+                                <td th:text="${p.category != null ? p.category.name : 'Chưa phân loại'}">Category</td>
+                                <td class="price-tag" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT')}">Price</td>
+                                <td style="color: var(--danger); font-weight: 800;" th:text="${p.quantity} + ' (Sắp hết)'">Quantity</td>
+                                <td th:text="${p.size} + ' / ' + ${p.color}">M / Black</td>
+                                <td>
+                                    <a href="/admin/products" class="btn btn-outline btn-sm" style="color: var(--primary); border-color: var(--primary-light);">
+                                        <i class="fa-solid fa-boxes-stacked"></i> Nhập kho / Sửa
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- INFO CARD FOR ADMINS -->
+            <div class="admin-card" th:if="${lowStockCount == 0}" style="text-align: center; padding: 3rem 1rem;">
+                <i class="fa-solid fa-circle-check" style="font-size: 3rem; color: var(--success); margin-bottom: 1rem;"></i>
+                <h3>Hệ thống vận hành ổn định!</h3>
+                <p style="color: var(--text-muted); margin-top: 0.5rem;">Không có sản phẩm nào ở mức tồn kho cảnh báo dưới 5 sản phẩm.</p>
+            </div>
+
+        </main>
+
+    </div>
+
+</body>
+</html>
